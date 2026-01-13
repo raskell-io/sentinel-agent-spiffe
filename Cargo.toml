@@ -9,7 +9,7 @@ repository = "https://github.com/raskell-io/sentinel-agent-spiffe"
 homepage = "https://sentinel.raskell.io"
 documentation = "https://sentinel.raskell.io/docs/agents/spiffe"
 description = "SPIFFE/SPIRE workload identity agent for Sentinel reverse proxy"
-keywords = ["proxy", "reverse-proxy", "agent", "spiffe", "spire", "zero-trust"]
+keywords = ["sentinel", "proxy", "agent", "spiffe", "spire"]
 categories = ["network-programming", "authentication"]
 readme = "README.md"
 
