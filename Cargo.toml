@@ -1,25 +1,25 @@
 [package]
-name = "sentinel-agent-spiffe"
+name = "zentinel-agent-spiffe"
 version = "0.2.0"
 edition = "2021"
 rust-version = "1.85"
-authors = ["Sentinel Contributors"]
+authors = ["Zentinel Contributors"]
 license = "Apache-2.0"
-repository = "https://github.com/raskell-io/sentinel-agent-spiffe"
-homepage = "https://sentinel.raskell.io"
-documentation = "https://sentinel.raskell.io/docs/agents/spiffe"
-description = "SPIFFE/SPIRE workload identity agent for Sentinel reverse proxy"
-keywords = ["sentinel", "proxy", "agent", "spiffe", "spire"]
+repository = "https://github.com/zentinelproxy/zentinel-agent-spiffe"
+homepage = "https://zentinelproxy.io"
+documentation = "https://zentinelproxy.io/docs/agents/spiffe"
+description = "SPIFFE/SPIRE workload identity agent for Zentinel reverse proxy"
+keywords = ["zentinel", "proxy", "agent", "spiffe", "spire"]
 categories = ["network-programming", "authentication"]
 readme = "README.md"
 
 [[bin]]
-name = "sentinel-spiffe-agent"
+name = "zentinel-spiffe-agent"
 path = "src/main.rs"
 
 [dependencies]
-# Sentinel protocol
-sentinel-agent-protocol = "0.3"
+# Zentinel protocol
+zentinel-agent-protocol = "0.3"
 
 # Async runtime
 tokio = { version = "1.40", features = ["full", "net"] }

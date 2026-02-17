@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 
-# Sentinel SPIFFE Agent Container Image
+# Zentinel SPIFFE Agent Container Image
 #
 # Targets:
 #   - prebuilt: For CI with pre-built binaries
@@ -10,16 +10,16 @@
 ################################################################################
 FROM gcr.io/distroless/cc-debian12:nonroot AS prebuilt
 
-COPY sentinel-spiffe-agent /sentinel-spiffe-agent
+COPY zentinel-spiffe-agent /zentinel-spiffe-agent
 
-LABEL org.opencontainers.image.title="Sentinel SPIFFE Agent" \
-      org.opencontainers.image.description="Sentinel SPIFFE Agent for Sentinel reverse proxy" \
+LABEL org.opencontainers.image.title="Zentinel SPIFFE Agent" \
+      org.opencontainers.image.description="Zentinel SPIFFE Agent for Zentinel reverse proxy" \
       org.opencontainers.image.vendor="Raskell" \
-      org.opencontainers.image.source="https://github.com/raskell-io/sentinel-agent-spiffe"
+      org.opencontainers.image.source="https://github.com/zentinelproxy/zentinel-agent-spiffe"
 
-ENV RUST_LOG=info,sentinel_spiffe_agent=debug \
-    SOCKET_PATH=/var/run/sentinel/spiffe.sock
+ENV RUST_LOG=info,zentinel_spiffe_agent=debug \
+    SOCKET_PATH=/var/run/zentinel/spiffe.sock
 
 USER nonroot:nonroot
 
-ENTRYPOINT ["/sentinel-spiffe-agent"]
+ENTRYPOINT ["/zentinel-spiffe-agent"]

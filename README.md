@@ -1,16 +1,16 @@
-# sentinel-agent-spiffe
+# zentinel-agent-spiffe
 
-SPIFFE/SPIRE workload identity agent for Sentinel reverse proxy.
+SPIFFE/SPIRE workload identity agent for Zentinel reverse proxy.
 
 ## Installation
 
 ```bash
-cargo install sentinel-agent-spiffe
+cargo install zentinel-agent-spiffe
 ```
 
 ## Documentation
 
-See [sentinel.raskell.io/docs/agents/spiffe](https://sentinel.raskell.io/docs/agents/spiffe)
+See [zentinelproxy.io/docs/agents/spiffe](https://zentinelproxy.io/docs/agents/spiffe)
 
 ## License
 

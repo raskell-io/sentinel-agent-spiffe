@@ -1,7 +1,7 @@
-//! Sentinel SPIFFE Authentication Agent
+//! Zentinel SPIFFE Authentication Agent
 //!
 //! This agent provides SPIFFE/SPIRE-based workload identity authentication
-//! for the Sentinel reverse proxy. It validates incoming client certificates
+//! for the Zentinel reverse proxy. It validates incoming client certificates
 //! containing SPIFFE SVIDs and enforces allowlist policies.
 //!
 //! # Features
@@ -17,10 +17,10 @@
 //!
 //! ```bash
 //! # UDS mode (default)
-//! sentinel-spiffe-agent --socket /var/run/sentinel/spiffe.sock
+//! zentinel-spiffe-agent --socket /var/run/zentinel/spiffe.sock
 //!
 //! # gRPC mode
-//! sentinel-spiffe-agent --grpc-address 127.0.0.1:50051
+//! zentinel-spiffe-agent --grpc-address 127.0.0.1:50051
 //! ```
 
 mod allowlist;
@@ -37,11 +37,11 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info, warn};
 
-use sentinel_agent_protocol::v2::{
+use zentinel_agent_protocol::v2::{
     AgentCapabilities, AgentFeatures, AgentHandlerV2, AgentLimits, DrainReason,
     GrpcAgentServerV2, HealthConfig, HealthStatus, MetricsReport, ShutdownReason,
 };
-use sentinel_agent_protocol::{
+use zentinel_agent_protocol::{
     AgentHandler, AgentResponse, AgentServer, AuditMetadata, ConfigureEvent, EventType, HeaderOp,
     RequestHeadersEvent,
 };
@@ -60,11 +60,11 @@ fn now_ms() -> u64 {
 
 /// Command line arguments
 #[derive(Parser, Debug)]
-#[command(name = "sentinel-spiffe-agent")]
-#[command(about = "SPIFFE/SPIRE workload identity agent for Sentinel reverse proxy")]
+#[command(name = "zentinel-spiffe-agent")]
+#[command(about = "SPIFFE/SPIRE workload identity agent for Zentinel reverse proxy")]
 struct Args {
     /// Path to Unix socket (UDS mode)
-    #[arg(long, default_value = "/tmp/sentinel-spiffe.sock", env = "AGENT_SOCKET")]
+    #[arg(long, default_value = "/tmp/zentinel-spiffe.sock", env = "AGENT_SOCKET")]
     socket: PathBuf,
 
     /// gRPC address to listen on (gRPC mode). If specified, UDS mode is disabled.
@@ -280,8 +280,8 @@ impl AgentHandlerV2 for SpiffeAgent {
     fn capabilities(&self) -> AgentCapabilities {
         AgentCapabilities {
             protocol_version: 2,
-            agent_id: "sentinel-spiffe-agent".to_string(),
-            name: "Sentinel SPIFFE Authentication Agent".to_string(),
+            agent_id: "zentinel-spiffe-agent".to_string(),
+            name: "Zentinel SPIFFE Authentication Agent".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
             supported_events: vec![EventType::RequestHeaders, EventType::Configure],
             features: AgentFeatures {
@@ -347,8 +347,8 @@ impl AgentHandlerV2 for SpiffeAgent {
 
         if is_draining {
             return HealthStatus {
-                agent_id: "sentinel-spiffe-agent".to_string(),
-                state: sentinel_agent_protocol::v2::HealthState::Draining { eta_ms: None },
+                agent_id: "zentinel-spiffe-agent".to_string(),
+                state: zentinel_agent_protocol::v2::HealthState::Draining { eta_ms: None },
                 message: Some("Agent is draining".to_string()),
                 load: None,
                 resources: None,
@@ -362,24 +362,24 @@ impl AgentHandlerV2 for SpiffeAgent {
 
         if !spire_connected {
             return HealthStatus::degraded(
-                "sentinel-spiffe-agent",
+                "zentinel-spiffe-agent",
                 vec!["spire_integration".to_string()],
                 1.5, // Increase timeout slightly when SPIRE is unavailable
             );
         }
 
-        HealthStatus::healthy("sentinel-spiffe-agent")
+        HealthStatus::healthy("zentinel-spiffe-agent")
     }
 
     /// Get current metrics report.
     fn metrics_report(&self) -> Option<MetricsReport> {
-        use sentinel_agent_protocol::v2::{CounterMetric, GaugeMetric};
+        use zentinel_agent_protocol::v2::{CounterMetric, GaugeMetric};
 
         let processed = self.requests_processed.load(Ordering::Relaxed);
         let allowed = self.requests_allowed.load(Ordering::Relaxed);
         let blocked = self.requests_blocked.load(Ordering::Relaxed);
 
-        let mut report = MetricsReport::new("sentinel-spiffe-agent", 10_000);
+        let mut report = MetricsReport::new("zentinel-spiffe-agent", 10_000);
 
         report.counters.push(CounterMetric::new(
             "spiffe_agent_requests_total",
@@ -576,7 +576,7 @@ async fn main() -> Result<()> {
     let log_level = if args.verbose { "debug" } else { "info" };
     tracing_subscriber::fmt()
         .with_env_filter(format!(
-            "{}={},sentinel_agent_protocol=info",
+            "{}={},zentinel_agent_protocol=info",
             env!("CARGO_CRATE_NAME"),
             log_level
         ))
@@ -586,7 +586,7 @@ async fn main() -> Result<()> {
     info!(
         version = env!("CARGO_PKG_VERSION"),
         protocol_version = 2,
-        "Starting Sentinel SPIFFE Agent"
+        "Starting Zentinel SPIFFE Agent"
     );
 
     // Build default configuration from args
@@ -610,12 +610,12 @@ async fn main() -> Result<()> {
             address = %grpc_addr,
             "Starting gRPC agent server (v2 protocol)"
         );
-        let server = GrpcAgentServerV2::new("sentinel-spiffe-agent", Box::new(agent));
+        let server = GrpcAgentServerV2::new("zentinel-spiffe-agent", Box::new(agent));
         server.run(grpc_addr).await.map_err(|e| anyhow::anyhow!("{}", e))?;
     } else {
         // UDS mode (default)
         info!(socket = ?args.socket, "Starting UDS agent server");
-        let server = AgentServer::new("sentinel-spiffe-agent", args.socket, Box::new(agent));
+        let server = AgentServer::new("zentinel-spiffe-agent", args.socket, Box::new(agent));
         server.run().await.map_err(|e| anyhow::anyhow!("{}", e))?;
     }
 
@@ -705,7 +705,7 @@ mod tests {
 
         let caps = agent.capabilities();
         assert_eq!(caps.protocol_version, 2);
-        assert_eq!(caps.agent_id, "sentinel-spiffe-agent");
+        assert_eq!(caps.agent_id, "zentinel-spiffe-agent");
         assert!(caps.features.config_push);
         assert!(caps.features.metrics_export);
         assert!(caps.features.health_reporting);
@@ -719,11 +719,11 @@ mod tests {
         let agent = SpiffeAgent::new(config).unwrap();
 
         let health = agent.health_status();
-        assert_eq!(health.agent_id, "sentinel-spiffe-agent");
+        assert_eq!(health.agent_id, "zentinel-spiffe-agent");
         // Should be degraded since SPIRE socket doesn't exist in tests
         assert!(matches!(
             health.state,
-            sentinel_agent_protocol::v2::HealthState::Degraded { .. }
+            zentinel_agent_protocol::v2::HealthState::Degraded { .. }
         ));
     }
 
@@ -736,7 +736,7 @@ mod tests {
         assert!(metrics.is_some());
 
         let report = metrics.unwrap();
-        assert_eq!(report.agent_id, "sentinel-spiffe-agent");
+        assert_eq!(report.agent_id, "zentinel-spiffe-agent");
         assert!(!report.counters.is_empty());
         assert!(!report.gauges.is_empty());
     }
