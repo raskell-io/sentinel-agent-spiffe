@@ -40,10 +40,10 @@ use tracing::{debug, info, warn};
 use zentinel_agent_protocol::v2::{
     AgentCapabilities, AgentFeatures, AgentHandlerV2, AgentLimits, DrainReason,
     GrpcAgentServerV2, HealthConfig, HealthStatus, MetricsReport, ShutdownReason,
+    UdsAgentServerV2,
 };
 use zentinel_agent_protocol::{
-    AgentHandler, AgentResponse, AgentServer, AuditMetadata, ConfigureEvent, EventType, HeaderOp,
-    RequestHeadersEvent,
+    AgentResponse, AuditMetadata, EventType, HeaderOp, RequestHeadersEvent,
 };
 
 use allowlist::{AllowlistMatch, SpiffeIdAllowlist};
@@ -545,28 +545,6 @@ impl AgentHandlerV2 for SpiffeAgent {
     }
 }
 
-/// v1 AgentHandler implementation for backwards compatibility with UDS mode.
-///
-/// This implementation delegates to the v2 handler methods where possible,
-/// adapting the v1 signatures to v2 semantics.
-#[async_trait::async_trait]
-impl AgentHandler for SpiffeAgent {
-    async fn on_configure(&self, event: ConfigureEvent) -> AgentResponse {
-        // Delegate to v2 on_configure, adapting the signature
-        let success = AgentHandlerV2::on_configure(self, event.config, None).await;
-        if success {
-            AgentResponse::default_allow()
-        } else {
-            AgentResponse::block(500, Some("Configuration failed".to_string()))
-        }
-    }
-
-    async fn on_request_headers(&self, event: RequestHeadersEvent) -> AgentResponse {
-        // Delegate to v2 on_request_headers (same signature)
-        AgentHandlerV2::on_request_headers(self, event).await
-    }
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
     // Parse command line arguments
@@ -615,7 +593,7 @@ async fn main() -> Result<()> {
     } else {
         // UDS mode (default)
         info!(socket = ?args.socket, "Starting UDS agent server");
-        let server = AgentServer::new("zentinel-spiffe-agent", args.socket, Box::new(agent));
+        let server = UdsAgentServerV2::new("zentinel-spiffe-agent", args.socket, Box::new(agent));
         server.run().await.map_err(|e| anyhow::anyhow!("{}", e))?;
     }
 
@@ -755,7 +733,6 @@ mod tests {
             }
         });
 
-        // Disambiguate between v1 and v2 traits
         let result = AgentHandlerV2::on_configure(&agent, new_config, Some("v1.0.0".to_string())).await;
         assert!(result);
 
